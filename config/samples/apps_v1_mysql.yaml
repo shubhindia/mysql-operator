@@ -4,4 +4,5 @@ metadata:
   name: mysql-sample
 spec:
   # Add fields here
-  foo: bar
+  image: "mysql:5.6"
+  size: 1

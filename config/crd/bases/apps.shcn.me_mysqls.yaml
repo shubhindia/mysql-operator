@@ -40,10 +40,13 @@ spec:
                 description: Foo is an example field of Mysql. Edit mysql_types.go
                   to remove/update
                 type: string
+              password:
+                type: string
               size:
                 format: int32
                 type: integer
             required:
+            - password
             - size
             type: object
           status:

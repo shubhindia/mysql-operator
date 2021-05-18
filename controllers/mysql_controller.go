@@ -114,7 +114,12 @@ func (c *MysqlReconciler) deployMysqlApp(ma *appsv1.Mysql) *a.Deployment {
 
 	replicas := ma.Spec.Size
 	labels := map[string]string{"app": "mysql-containers"}
+	password := ma.Spec.Password
 	image := ma.Spec.Image
+	env := corev1.EnvVar{
+		Name:  "MYSQL_ROOT_PASSWORD",
+		Value: password,
+	}
 	dep := &a.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ma.Name,
@@ -132,7 +137,7 @@ func (c *MysqlReconciler) deployMysqlApp(ma *appsv1.Mysql) *a.Deployment {
 				Spec: corev1.PodSpec{Containers: []corev1.Container{{
 					Image: image,
 					Name:  ma.Name,
-					Env:   []corev1.EnvVar{},
+					Env:   []corev1.EnvVar{env},
 					Ports: []corev1.ContainerPort{},
 				}},
 				},

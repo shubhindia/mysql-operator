@@ -29,8 +29,9 @@ type MysqlSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of Mysql. Edit mysql_types.go to remove/update
-	Image string `json:"image,omitempty"`
-	Size  int32  `json:"size"`
+	Image    string `json:"image,omitempty"`
+	Size     int32  `json:"size"`
+	Password string `json:"password"`
 }
 
 // MysqlStatus defines the observed state of Mysql

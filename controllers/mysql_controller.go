@@ -73,10 +73,18 @@ func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if err != nil && errors.IsNotFound(err) {
 		log.Info("Mysql deployment not found. Creating one")
 		dep := r.deployMysqlApp(mysql)
-		log.Info("Creating a new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
+		log.Info("Creating a new Deployment ", "Deployment.Namespace ", dep.Namespace, "Deployment.Name ", dep.Name)
 		err = r.Client.Create(ctx, dep)
 		if err != nil {
-			log.Error(err, "Failed to create new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
+			log.Error(err, "Failed to create new Deployment ", "Deployment.Namespace ", dep.Namespace, "Deployment.Name ", dep.Name)
+			return ctrl.Result{}, err
+		}
+		//Here I am assuming that service doesn't exist as well, so I am creating one. This needs to be handled in cleaner way
+		ser := r.deployMysqlService(mysql)
+		log.Info("Creating a new Service ", "Service.Namespace ", ser.Namespace, "Service.Name ", ser.Name)
+		err := r.Client.Create(ctx, ser)
+		if err != nil {
+			log.Error("Failed to create new Service ", "Service.Namespace ", ser.Namespace, "Service.Name ", ser.Name)
 			return ctrl.Result{}, err
 		}
 		// If there is no error, that means deployment was created successfully. Return and requeue
@@ -93,7 +101,7 @@ func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		log.Info("Changing desired size")
 		err = r.Client.Update(ctx, found)
 		if err != nil {
-			log.Error(err, "Failed to update Deployment", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
+			log.Error(err, "Failed to update Deployment ", "Deployment.Namespace ", found.Namespace, "Deployment.Name ", found.Name)
 			return ctrl.Result{}, err
 		}
 		//Spec updated. Return and requeue
@@ -148,4 +156,26 @@ func (c *MysqlReconciler) deployMysqlApp(ma *appsv1.Mysql) *a.Deployment {
 	}
 	ctrl.SetControllerReference(ma, dep, c.Scheme)
 	return dep
+}
+
+func (c *MysqlReconciler) deployMysqlService(ma *appsv1.Mysql) *corev1.Service {
+	labels := map[string]string{"app": "mysql-containers"}
+
+	ser := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ma.Name,
+			Namespace: ma.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: labels,
+			Ports: []corev1.ServicePort{{
+				Protocol: corev1.ProtocolTCP,
+				Port:     3306,
+				Name:     "mysql-port",
+			}},
+			Type: corev1.ServiceTypeNodePort,
+		},
+	}
+	ctrl.SetControllerReference(ma, ser, c.Scheme)
+	return ser
 }

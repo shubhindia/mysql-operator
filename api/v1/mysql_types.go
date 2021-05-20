@@ -32,6 +32,7 @@ type MysqlSpec struct {
 	Image    string `json:"image,omitempty"`
 	Size     int32  `json:"size"`
 	Password string `json:"password"`
+	UsePVC   bool   `json:"usepvc"`
 }
 
 // MysqlStatus defines the observed state of Mysql

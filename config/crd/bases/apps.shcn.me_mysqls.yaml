@@ -45,9 +45,12 @@ spec:
               size:
                 format: int32
                 type: integer
+              usepvc:
+                type: boolean
             required:
             - password
             - size
+            - usepvc
             type: object
           status:
             description: MysqlStatus defines the observed state of Mysql

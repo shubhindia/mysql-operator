@@ -89,12 +89,14 @@ func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 		//Here I am creating a PVC for the mysql pod to use. Each time a new pvc will be created.
 		//TODO: Add a logic to create pvc only if it is not provided in the Mysql yaml.
-		pvc := r.deployMysqlPVC(mysql)
-		log.Info("Creating a PVC ", "PVC.Namespace ", pvc.Namespace, "PVC.Name ", pvc.Name)
-		err = r.Client.Create(ctx, pvc)
-		if err != nil {
-			log.Error("Failed to create new PVC ", "PVC.Namespace ", pvc.Namespace, "PVC.Name ", pvc.Name)
-			return ctrl.Result{}, err
+		if mysql.Spec.UsePVC == true {
+			pvc := r.deployMysqlPVC(mysql)
+			log.Info("Creating a PVC ", "PVC.Namespace ", pvc.Namespace, "PVC.Name ", pvc.Name)
+			err = r.Client.Create(ctx, pvc)
+			if err != nil {
+				log.Error("Failed to create new PVC ", "PVC.Namespace ", pvc.Namespace, "PVC.Name ", pvc.Name)
+				return ctrl.Result{}, err
+			}
 		}
 		// If there is no error, that means deployment was created successfully. Return and requeue
 		return ctrl.Result{Requeue: true}, nil

@@ -82,9 +82,18 @@ func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		//Here I am assuming that service doesn't exist as well, so I am creating one. This needs to be handled in cleaner way
 		ser := r.deployMysqlService(mysql)
 		log.Info("Creating a new Service ", "Service.Namespace ", ser.Namespace, "Service.Name ", ser.Name)
-		err := r.Client.Create(ctx, ser)
+		err = r.Client.Create(ctx, ser)
 		if err != nil {
 			log.Error("Failed to create new Service ", "Service.Namespace ", ser.Namespace, "Service.Name ", ser.Name)
+			return ctrl.Result{}, err
+		}
+		//Here I am creating a PVC for the mysql pod to use. Each time a new pvc will be created.
+		//TODO: Add a logic to create pvc only if it is not provided in the Mysql yaml.
+		pvc := r.deployMysqlPVC(mysql)
+		log.Info("Creating a PVC ", "PVC.Namespace ", pvc.Namespace, "PVC.Name ", pvc.Name)
+		err = r.Client.Create(ctx, pvc)
+		if err != nil {
+			log.Error("Failed to create new PVC ", "PVC.Namespace ", pvc.Namespace, "PVC.Name ", pvc.Name)
 			return ctrl.Result{}, err
 		}
 		// If there is no error, that means deployment was created successfully. Return and requeue
@@ -178,4 +187,24 @@ func (c *MysqlReconciler) deployMysqlService(ma *appsv1.Mysql) *corev1.Service {
 	}
 	ctrl.SetControllerReference(ma, ser, c.Scheme)
 	return ser
+}
+
+func (c *MysqlReconciler) deployMysqlPVC(ma *appsv1.Mysql) *corev1.PersistentVolumeClaim {
+	/*
+		TODO:
+			1. Get the PVC size from Mysql app rather than hardcoding here. For now I am hardcoding it just to create initial scafold
+	*/
+	labels := map[string]string{"app": "mysql-containers"}
+	pvc := &corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ma.Name,
+			Namespace: ma.Namespace,
+			Labels:    labels,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{"ReadWriteOnce"},
+		},
+	}
+	ctrl.SetControllerReference(ma, pvc, c.Scheme)
+	return pvc
 }

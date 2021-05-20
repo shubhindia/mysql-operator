@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-operator-deployment
+  namespace: mysql-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-operator-controller
+  template:
+    metadata:
+      labels:
+        app: mysql-operator-controller
+    spec:
+      containers:
+        - name: mysql-operator-controller
+          image: shubhindia/mysql-operator:alpha1
+          imagePullPolicy: Always
+      serviceAccountName: controller-manager

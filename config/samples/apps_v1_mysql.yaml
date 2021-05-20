@@ -8,3 +8,4 @@ spec:
   size: 1
   password: "password"
   usepvc: true
+  pvcsize: 5Gi

@@ -25,6 +25,7 @@ import (
 	a "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -165,7 +166,27 @@ func (c *MysqlReconciler) deployMysqlApp(ma *appsv1.Mysql) *a.Deployment {
 							ContainerPort: 3306,
 							Name:          "mysql",
 						}},
-					}},
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								Name:      "mysql-persistent-storage",
+								MountPath: "/var/lib/mysql",
+							},
+						},
+					},
+					},
+
+					Volumes: []corev1.Volume{
+
+						{
+							Name: "mysql-persistent-storage",
+							VolumeSource: corev1.VolumeSource{
+
+								PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+									ClaimName: ma.Name + "-pvc",
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -210,12 +231,17 @@ func (c *MysqlReconciler) deployMysqlPVC(ma *appsv1.Mysql) *corev1.PersistentVol
 	labels := map[string]string{"app": "mysql-containers"}
 	pvc := &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ma.Name,
+			Name:      ma.Name + "-pvc",
 			Namespace: ma.Namespace,
 			Labels:    labels,
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
 			AccessModes: []corev1.PersistentVolumeAccessMode{"ReadWriteOnce"},
+			Resources: corev1.ResourceRequirements{
+				Requests: map[corev1.ResourceName]resource.Quantity{
+					corev1.ResourceStorage: resource.MustParse(ma.Spec.PVCSize),
+				},
+			},
 		},
 	}
 	ctrl.SetControllerReference(ma, pvc, c.Scheme)

@@ -131,6 +131,7 @@ func (c *MysqlReconciler) deployMysqlApp(ma *appsv1.Mysql) *a.Deployment {
 
 	replicas := ma.Spec.Size
 	labels := map[string]string{"app": "mysql-containers"}
+	matchlabels := map[string]string{"app": "mysql"}
 	image := ma.Spec.Image
 	env := corev1.EnvVar{
 		Name:  "MYSQL_ROOT_PASSWORD",
@@ -140,15 +141,16 @@ func (c *MysqlReconciler) deployMysqlApp(ma *appsv1.Mysql) *a.Deployment {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ma.Name,
 			Namespace: ma.Namespace,
+			Labels:    labels,
 		},
 		Spec: a.DeploymentSpec{
 			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
+				MatchLabels: matchlabels,
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
+					Labels: matchlabels,
 				},
 				Spec: corev1.PodSpec{Containers: []corev1.Container{{
 					Image: image,
@@ -169,14 +171,16 @@ func (c *MysqlReconciler) deployMysqlApp(ma *appsv1.Mysql) *a.Deployment {
 
 func (c *MysqlReconciler) deployMysqlService(ma *appsv1.Mysql) *corev1.Service {
 	labels := map[string]string{"app": "mysql-containers"}
+	matchlabels := map[string]string{"app": "mysql"}
 
 	ser := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ma.Name,
 			Namespace: ma.Namespace,
+			Labels:    labels,
 		},
 		Spec: corev1.ServiceSpec{
-			Selector: labels,
+			Selector: matchlabels,
 			Ports: []corev1.ServicePort{{
 				Protocol: corev1.ProtocolTCP,
 				Port:     3306,

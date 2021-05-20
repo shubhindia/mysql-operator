@@ -131,22 +131,17 @@ func (r *MysqlReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (c *MysqlReconciler) deployMysqlApp(ma *appsv1.Mysql) *a.Deployment {
 
-	replicas := ma.Spec.Size
 	labels := map[string]string{"app": "mysql-containers"}
 	matchlabels := map[string]string{"app": "mysql"}
-	image := ma.Spec.Image
-	env := corev1.EnvVar{
-		Name:  "MYSQL_ROOT_PASSWORD",
-		Value: ma.Spec.Password,
-	}
+
 	dep := &a.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ma.Name,
 			Namespace: ma.Namespace,
 			Labels:    labels,
 		},
+
 		Spec: a.DeploymentSpec{
-			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: matchlabels,
 			},
@@ -154,15 +149,23 @@ func (c *MysqlReconciler) deployMysqlApp(ma *appsv1.Mysql) *a.Deployment {
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: matchlabels,
 				},
-				Spec: corev1.PodSpec{Containers: []corev1.Container{{
-					Image: image,
-					Name:  ma.Name,
-					Env:   []corev1.EnvVar{env},
-					Ports: []corev1.ContainerPort{{
-						Name:          "mysql-port",
-						ContainerPort: 3306,
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+						Image: ma.Spec.Image,
+						Name:  "mysql",
+
+						Env: []corev1.EnvVar{
+							{
+								Name:  "MYSQL_ROOT_PASSWORD",
+								Value: ma.Spec.Password,
+							},
+						},
+
+						Ports: []corev1.ContainerPort{{
+							ContainerPort: 3306,
+							Name:          "mysql",
+						}},
 					}},
-				}},
 				},
 			},
 		},
@@ -176,18 +179,22 @@ func (c *MysqlReconciler) deployMysqlService(ma *appsv1.Mysql) *corev1.Service {
 	matchlabels := map[string]string{"app": "mysql"}
 
 	ser := &corev1.Service{
+
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ma.Name,
 			Namespace: ma.Namespace,
 			Labels:    labels,
 		},
+
 		Spec: corev1.ServiceSpec{
 			Selector: matchlabels,
-			Ports: []corev1.ServicePort{{
-				Protocol: corev1.ProtocolTCP,
-				Port:     3306,
-				Name:     "mysql-port",
-			}},
+
+			Ports: []corev1.ServicePort{
+				{
+					Port: 3306,
+					Name: "mysql",
+				},
+			},
 			Type: corev1.ServiceTypeNodePort,
 		},
 	}

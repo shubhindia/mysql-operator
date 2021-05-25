@@ -42,17 +42,14 @@ spec:
                 type: string
               password:
                 type: string
-              pvcsize:
-                type: string
-              size:
-                format: int32
-                type: integer
+              pvcspec:
+                additionalProperties:
+                  type: string
+                type: object
               usepvc:
                 type: boolean
             required:
             - password
-            - pvcsize
-            - size
             - usepvc
             type: object
           status:

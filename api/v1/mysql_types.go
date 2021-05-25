@@ -29,11 +29,10 @@ type MysqlSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of Mysql. Edit mysql_types.go to remove/update
-	Image    string `json:"image,omitempty"`
-	Size     int32  `json:"size"`
-	Password string `json:"password"`
-	UsePVC   bool   `json:"usepvc"`
-	PVCSize  string `json:"pvcsize"`
+	Image    string            `json:"image,omitempty"`
+	Password string            `json:"password"`
+	UsePVC   bool              `json:"usepvc"`
+	PVCSpec  map[string]string `json:"pvcspec,omitempty"`
 }
 
 // MysqlStatus defines the observed state of Mysql

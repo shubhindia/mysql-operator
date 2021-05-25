@@ -106,20 +106,7 @@ func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		log.Error(err, "Failed to get Deployment")
 		return ctrl.Result{}, err
 	}
-	//Check for desired amount of deployments
-	size := mysql.Spec.Size
-	if *found.Spec.Replicas != size {
-		found.Spec.Replicas = &size
-		log.Info("Changing desired size")
-		err = r.Client.Update(ctx, found)
-		if err != nil {
-			log.Error(err, "Failed to update Deployment ", "Deployment.Namespace ", found.Namespace, "Deployment.Name ", found.Name)
-			return ctrl.Result{}, err
-		}
-		//Spec updated. Return and requeue
-		return ctrl.Result{Requeue: true}, nil
 
-	}
 	return ctrl.Result{}, nil
 }
 
@@ -228,6 +215,7 @@ func (c *MysqlReconciler) deployMysqlPVC(ma *appsv1.Mysql) *corev1.PersistentVol
 		TODO:
 			1. Get the PVC size from Mysql app rather than hardcoding here. For now I am hardcoding it just to create initial scafold
 	*/
+	pvcsize := ma.Spec.PVCSpec["size"]
 	labels := map[string]string{"app": "mysql-containers"}
 	pvc := &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
@@ -239,7 +227,7 @@ func (c *MysqlReconciler) deployMysqlPVC(ma *appsv1.Mysql) *corev1.PersistentVol
 			AccessModes: []corev1.PersistentVolumeAccessMode{"ReadWriteOnce"},
 			Resources: corev1.ResourceRequirements{
 				Requests: map[corev1.ResourceName]resource.Quantity{
-					corev1.ResourceStorage: resource.MustParse(ma.Spec.PVCSize),
+					corev1.ResourceStorage: resource.MustParse(pvcsize),
 				},
 			},
 		},

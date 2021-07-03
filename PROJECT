@@ -1,8 +1,7 @@
-domain: shcn.me
-layout: go.kubebuilder.io/v3
-plugins:
-  manifests.sdk.operatorframework.io/v2: {}
-  scorecard.sdk.operatorframework.io/v2: {}
+domain: shubhindia.me
+layout:
+- go.kubebuilder.io/v3
+multigroup: true
 projectName: mysql-operator
 repo: github.com/shubhindia/mysql-operator
 resources:
@@ -10,9 +9,9 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: shcn.me
+  domain: shubhindia.me
   group: apps
   kind: Mysql
-  path: github.com/shubhindia/mysql-operator/api/v1
-  version: v1
+  path: github.com/shubhindia/mysql-operator/apis/apps/v1beta1
+  version: v1beta1
 version: "3"

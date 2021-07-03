@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: mysqls.apps.shcn.me
+  name: mysqls.apps.shubhindia.me
 spec:
-  group: apps.shcn.me
+  group: apps.shubhindia.me
   names:
     kind: Mysql
     listKind: MysqlList
@@ -16,7 +16,7 @@ spec:
     singular: mysql
   scope: Namespaced
   versions:
-  - name: v1
+  - name: v1beta1
     schema:
       openAPIV3Schema:
         description: Mysql is the Schema for the mysqls API
@@ -36,20 +36,24 @@ spec:
           spec:
             description: MysqlSpec defines the desired state of Mysql
             properties:
-              image:
-                description: Foo is an example field of Mysql. Edit mysql_types.go
-                  to remove/update
-                type: string
               password:
                 type: string
               pvcspec:
-                additionalProperties:
-                  type: string
+                description: PVCSpec defines the desired state of PVC used by Mysql
+                properties:
+                  name:
+                    type: string
+                  size:
+                    type: string
+                required:
+                - name
+                - size
                 type: object
               usepvc:
                 type: boolean
+              username:
+                type: string
             required:
-            - password
             - usepvc
             type: object
           status:

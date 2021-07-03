@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,16 +23,21 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+//PVCSpec defines the desired state of PVC used by Mysql
+type PVCSpec struct {
+	Name string `json:"name"`
+	Size string `json:"size"`
+}
+
 // MysqlSpec defines the desired state of Mysql
 type MysqlSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Mysql. Edit mysql_types.go to remove/update
-	Image    string            `json:"image,omitempty"`
-	Password string            `json:"password"`
-	UsePVC   bool              `json:"usepvc"`
-	PVCSpec  map[string]string `json:"pvcspec,omitempty"`
+	Username string  `json:"username,omitempty"`
+	Password string  `json:"password,omitempty"`
+	UsePVC   bool    `json:"usepvc"`
+	PVCSpec  PVCSpec `json:"pvcspec,omitempty"`
 }
 
 // MysqlStatus defines the observed state of Mysql

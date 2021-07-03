@@ -1,0 +1,7 @@
+apiVersion: apps.shubhindia.me/v1beta1
+kind: Mysql
+metadata:
+  name: mysql-sample
+spec:
+  # Add fields here
+  foo: bar

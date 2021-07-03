@@ -31,8 +31,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	appsv1 "github.com/shubhindia/mysql-operator/api/v1"
-	"github.com/shubhindia/mysql-operator/controllers"
+	appsv1beta1 "github.com/shubhindia/mysql-operator/apis/apps/v1beta1"
+	appscontrollers "github.com/shubhindia/mysql-operator/controllers/apps"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -44,7 +44,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(appsv1.AddToScheme(scheme))
+	utilruntime.Must(appsv1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -71,16 +71,15 @@ func main() {
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "13a0be67.shcn.me",
+		LeaderElectionID:       "13a0be67.shubhindia.me",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
-	if err = (&controllers.MysqlReconciler{
+	if err = (&appscontrollers.MysqlReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Mysql"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Mysql")

@@ -19,18 +19,21 @@ package apps
 import (
 	"context"
 
+	"github.com/go-logr/logr"
+	"github.com/shubhindia/mysql-operator/apis/apps/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	appsv1beta1 "github.com/shubhindia/mysql-operator/apis/apps/v1beta1"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 // MysqlReconciler reconciles a Mysql object
 type MysqlReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	log    logr.Logger
 }
 
 //+kubebuilder:rbac:groups=apps.shubhindia.me,resources=mysqls,verbs=get;list;watch;create;update;patch;delete
@@ -47,9 +50,15 @@ type MysqlReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	r.log = log.FromContext(ctx).WithValues("Mysql", req.NamespacedName)
+	r.log.Info("Started mysql reconciliation")
 
-	// your logic here
+	instance := &v1beta1.Mysql{}
+	if err := r.Get(ctx, req.NamespacedName, instance); err != nil {
+		r.log.Info("Unable to fetch mysql object")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+
+	}
 
 	return ctrl.Result{}, nil
 }

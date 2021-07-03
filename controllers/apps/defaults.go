@@ -21,5 +21,10 @@ import (
 )
 
 func (r *MysqlReconciler) ensureDefaults(instance *v1beta1.Mysql) error {
+
+	if instance.Spec.Username == "" {
+		instance.Spec.Username = "admin"
+	}
+
 	return nil
 }

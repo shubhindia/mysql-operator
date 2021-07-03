@@ -25,8 +25,9 @@ import (
 
 //PVCSpec defines the desired state of PVC used by Mysql
 type PVCSpec struct {
-	Name string `json:"name"`
-	Size string `json:"size"`
+	Name             string `json:"name"`
+	Size             string `json:"size"`
+	StorageClassName string `json:"storageclass"`
 }
 
 // MysqlSpec defines the desired state of Mysql
@@ -35,7 +36,6 @@ type MysqlSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	Username string  `json:"username,omitempty"`
-	Password string  `json:"password,omitempty"`
 	UsePVC   bool    `json:"usepvc"`
 	PVCSpec  PVCSpec `json:"pvcspec,omitempty"`
 }

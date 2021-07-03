@@ -3,5 +3,9 @@ kind: Mysql
 metadata:
   name: mysql-sample
 spec:
-  # Add fields here
-  foo: bar
+  username: shubhi
+  usepvc: false
+  pvcspec:
+    name: test
+    size: 1Gi
+    storageclass: standard

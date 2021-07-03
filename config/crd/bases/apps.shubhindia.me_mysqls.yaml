@@ -36,8 +36,6 @@ spec:
           spec:
             description: MysqlSpec defines the desired state of Mysql
             properties:
-              password:
-                type: string
               pvcspec:
                 description: PVCSpec defines the desired state of PVC used by Mysql
                 properties:
@@ -45,9 +43,12 @@ spec:
                     type: string
                   size:
                     type: string
+                  storageclass:
+                    type: string
                 required:
                 - name
                 - size
+                - storageclass
                 type: object
               usepvc:
                 type: boolean

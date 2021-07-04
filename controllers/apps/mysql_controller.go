@@ -65,10 +65,10 @@ func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if err := r.ensurePvc(ctx, instance); err != nil {
 		return ctrl.Result{}, err
 	}
-	if err := r.ensureDeployment(instance); err != nil {
+	if err := r.ensureDeployment(ctx, instance); err != nil {
 		return ctrl.Result{}, err
 	}
-	if err := r.ensureService(instance); err != nil {
+	if err := r.ensureService(ctx, instance); err != nil {
 		return ctrl.Result{}, err
 	}
 

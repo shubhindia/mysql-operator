@@ -22,8 +22,17 @@ import (
 
 func (r *MysqlReconciler) ensureDefaults(instance *v1beta1.Mysql) error {
 
-	if instance.Spec.Username == "" {
-		instance.Spec.Username = "admin"
+	if instance.Spec.Image == "" {
+		instance.Spec.Image = "mysql:5.6"
+	}
+	if instance.Spec.PVCSpec.Name == "" {
+		instance.Spec.PVCSpec.Name = "mysql-pvc"
+	}
+	if instance.Spec.PVCSpec.Size == "" {
+		instance.Spec.PVCSpec.Size = "1Gi"
+	}
+	if instance.Spec.PVCSpec.StorageClassName == "" {
+		instance.Spec.PVCSpec.StorageClassName = "standard"
 	}
 
 	return nil

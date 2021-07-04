@@ -34,10 +34,9 @@ type PVCSpec struct {
 type MysqlSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-
-	Username string  `json:"username,omitempty"`
-	UsePVC   bool    `json:"usepvc"`
-	PVCSpec  PVCSpec `json:"pvcspec,omitempty"`
+	Image   string  `json:"image,omitempty"`
+	UsePVC  bool    `json:"usepvc"`
+	PVCSpec PVCSpec `json:"pvcspec,omitempty"`
 }
 
 // MysqlStatus defines the observed state of Mysql

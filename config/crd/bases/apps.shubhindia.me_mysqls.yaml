@@ -36,6 +36,10 @@ spec:
           spec:
             description: MysqlSpec defines the desired state of Mysql
             properties:
+              image:
+                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                  Important: Run "make" to regenerate code after modifying this file'
+                type: string
               pvcspec:
                 description: PVCSpec defines the desired state of PVC used by Mysql
                 properties:
@@ -52,8 +56,6 @@ spec:
                 type: object
               usepvc:
                 type: boolean
-              username:
-                type: string
             required:
             - usepvc
             type: object

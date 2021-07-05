@@ -48,7 +48,38 @@ func StringWithCharset(length int, charset string) string {
 
 func (r *MysqlReconciler) ensureDeployment(ctx context.Context, instance *v1beta1.Mysql) error {
 
-	mysqlPassword := StringWithCharset(10, charset)
+	//Store the secret in k8s secret so can be used later
+	secretName := instance.Name + "-user-password"
+	secret := &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: instance.Namespace,
+		},
+		Type: "Opaque",
+		Data: map[string][]byte{
+			"password": []byte(StringWithCharset(10, charset)),
+		},
+	}
+	err := r.Client.Get(ctx, types.NamespacedName{Name: secretName, Namespace: instance.Namespace}, secret)
+	if err != nil {
+
+		if k8serrors.IsNotFound(err) {
+			//creating pvc
+			err = ctrl.SetControllerReference(instance, secret, r.Scheme)
+			if err != nil {
+				return errors.Wrapf(err, "Error setting owner reference")
+			}
+			err = r.Client.Create(ctx, secret)
+			if err != nil {
+				return errors.Wrapf(err, "Error creating a secret")
+			}
+
+			return nil
+		}
+		return errors.Wrapf(err, "Error getting secret")
+	}
+	//Create mysql deployment here
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instance.Name,
@@ -72,7 +103,7 @@ func (r *MysqlReconciler) ensureDeployment(ctx context.Context, instance *v1beta
 						Env: []corev1.EnvVar{
 							{
 								Name:  "MYSQL_ROOT_PASSWORD",
-								Value: mysqlPassword,
+								Value: string(secret.Data["password"]),
 							},
 						},
 
@@ -105,7 +136,7 @@ func (r *MysqlReconciler) ensureDeployment(ctx context.Context, instance *v1beta
 			},
 		},
 	}
-	err := r.Client.Get(ctx, types.NamespacedName{Name: deployment.Name, Namespace: instance.Namespace}, deployment)
+	err = r.Client.Get(ctx, types.NamespacedName{Name: deployment.Name, Namespace: instance.Namespace}, deployment)
 	if err != nil {
 
 		if k8serrors.IsNotFound(err) {
@@ -122,38 +153,6 @@ func (r *MysqlReconciler) ensureDeployment(ctx context.Context, instance *v1beta
 			return nil
 		}
 		return errors.Wrapf(err, "Error getting deployment")
-	}
-
-	//Store the username and secret in k8s secret so can be used later
-	secretName := instance.Name + "-user-password"
-	secret := &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: instance.Namespace,
-		},
-		Type: "Opaque",
-		Data: map[string][]byte{
-			"password": []byte(mysqlPassword),
-		},
-	}
-	err = r.Client.Get(ctx, types.NamespacedName{Name: secretName, Namespace: instance.Namespace}, secret)
-	if err != nil {
-
-		if k8serrors.IsNotFound(err) {
-			//creating pvc
-			err = ctrl.SetControllerReference(instance, secret, r.Scheme)
-			if err != nil {
-				return errors.Wrapf(err, "Error setting owner reference")
-			}
-			err = r.Client.Create(ctx, secret)
-			if err != nil {
-				return errors.Wrapf(err, "Error creating a secret")
-			}
-
-			return nil
-		}
-		return errors.Wrapf(err, "Error getting secret")
 	}
 
 	return nil

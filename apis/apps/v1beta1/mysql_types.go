@@ -17,11 +17,14 @@ limitations under the License.
 package v1beta1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const (
+	MysqlStatusReady = "Ready"
+	MysqlStatusError = "Error"
+)
 
 //PVCSpec defines the desired state of PVC used by Mysql
 type PVCSpec struct {
@@ -41,13 +44,15 @@ type MysqlSpec struct {
 
 // MysqlStatus defines the observed state of Mysql
 type MysqlStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Status    string                 `json:"status"`
+	Message   string                 `json:"message"`
+	SecretRef corev1.SecretReference `json:"secretRef"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-
+//+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+//+kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
 // Mysql is the Schema for the mysqls API
 type Mysql struct {
 	metav1.TypeMeta   `json:",inline"`

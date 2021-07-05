@@ -22,9 +22,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shubhindia/mysql-operator/apis/apps/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -46,11 +47,23 @@ func (r *MysqlReconciler) ensurePvc(ctx context.Context, instance *v1beta1.Mysql
 		},
 	}
 
-	if err := ctrl.SetControllerReference(instance, mysqlPVC, r.Scheme); err != nil {
-		return errors.Wrapf(err, "Error setting owner reference")
-	}
-	if err := r.Client.Create(ctx, mysqlPVC); err != nil {
-		return errors.Wrapf(err, "Error creating a pvc")
+	err := r.Client.Get(ctx, types.NamespacedName{Name: mysqlPVC.Name, Namespace: instance.Namespace}, mysqlPVC)
+	if err != nil {
+
+		if k8serrors.IsNotFound(err) {
+			//creating pvc
+			err = ctrl.SetControllerReference(instance, mysqlPVC, r.Scheme)
+			if err != nil {
+				return errors.Wrapf(err, "Error setting owner reference")
+			}
+			err = r.Client.Create(ctx, mysqlPVC)
+			if err != nil {
+				return errors.Wrapf(err, "Error creating a secret")
+			}
+
+			return nil
+		}
+		return errors.Wrapf(err, "Error getting pvc")
 	}
 
 	return nil

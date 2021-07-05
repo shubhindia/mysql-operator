@@ -16,7 +16,14 @@ spec:
     singular: mysql
   scope: Namespaced
   versions:
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - jsonPath: .status.status
+      name: Status
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: Mysql is the Schema for the mysqls API
@@ -61,6 +68,28 @@ spec:
             type: object
           status:
             description: MysqlStatus defines the observed state of Mysql
+            properties:
+              message:
+                type: string
+              secretRef:
+                description: SecretReference represents a Secret Reference. It has
+                  enough information to retrieve secret in any namespace
+                properties:
+                  name:
+                    description: Name is unique within a namespace to reference a
+                      secret resource.
+                    type: string
+                  namespace:
+                    description: Namespace defines the space within which the secret
+                      name must be unique.
+                    type: string
+                type: object
+              status:
+                type: string
+            required:
+            - message
+            - secretRef
+            - status
             type: object
         type: object
     served: true

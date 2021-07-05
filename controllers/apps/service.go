@@ -24,7 +24,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func (r *MysqlReconciler) ensureService(ctx context.Context, instance *v1beta1.Mysql) error {
@@ -49,11 +51,23 @@ func (r *MysqlReconciler) ensureService(ctx context.Context, instance *v1beta1.M
 			Type: corev1.ServiceTypeNodePort,
 		},
 	}
-	if err := ctrl.SetControllerReference(instance, service, r.Scheme); err != nil {
-		return errors.Wrapf(err, "Error setting owner reference")
-	}
-	if err := r.Client.Create(ctx, service); err != nil {
-		return errors.Wrapf(err, "Error creating a service")
+	err := r.Client.Get(ctx, types.NamespacedName{Name: service.Name, Namespace: instance.Namespace}, service)
+	if err != nil {
+
+		if k8serrors.IsNotFound(err) {
+			//creating pvc
+			err = ctrl.SetControllerReference(instance, service, r.Scheme)
+			if err != nil {
+				return errors.Wrapf(err, "Error setting owner reference")
+			}
+			err = r.Client.Create(ctx, service)
+			if err != nil {
+				return errors.Wrapf(err, "Error creating a service")
+			}
+
+			return nil
+		}
+		return errors.Wrapf(err, "Error getting service")
 	}
 	return nil
 }

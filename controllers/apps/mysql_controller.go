@@ -18,6 +18,7 @@ package apps
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 	"github.com/shubhindia/mysql-operator/apis/apps/v1beta1"
@@ -60,19 +61,28 @@ func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	}
 	if err := r.ensureDefaults(instance); err != nil {
-		return ctrl.Result{}, err
+		instance.Status.Status = v1beta1.MysqlStatusError
+		instance.Status.Message = err.Error()
+		return r.ensureStatus(ctx, instance, ctrl.Result{})
 	}
 	if err := r.ensurePvc(ctx, instance); err != nil {
-		return ctrl.Result{}, err
+		instance.Status.Status = v1beta1.MysqlStatusError
+		instance.Status.Message = err.Error()
+		return r.ensureStatus(ctx, instance, ctrl.Result{})
 	}
 	if err := r.ensureDeployment(ctx, instance); err != nil {
-		return ctrl.Result{}, err
+		instance.Status.Status = v1beta1.MysqlStatusError
+		instance.Status.Message = err.Error()
+		return r.ensureStatus(ctx, instance, ctrl.Result{})
 	}
 	if err := r.ensureService(ctx, instance); err != nil {
-		return ctrl.Result{}, err
+		instance.Status.Status = v1beta1.MysqlStatusError
+		instance.Status.Message = err.Error()
+		return r.ensureStatus(ctx, instance, ctrl.Result{})
 	}
-
-	return ctrl.Result{}, nil
+	instance.Status.Status = v1beta1.MysqlStatusReady
+	instance.Status.Message = fmt.Sprintf("Mysql instance %s is ready", instance.Name)
+	return r.ensureStatus(ctx, instance, ctrl.Result{})
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -80,4 +90,15 @@ func (r *MysqlReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appsv1beta1.Mysql{}).
 		Complete(r)
+}
+
+func (r *MysqlReconciler) ensureStatus(ctx context.Context, instance *v1beta1.Mysql, result ctrl.Result) (ctrl.Result, error) {
+
+	err := r.Status().Update(ctx, instance)
+	if err != nil {
+		r.log.Error(err, "Failed to update status")
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	return result, nil
 }

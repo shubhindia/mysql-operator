@@ -27,7 +27,9 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +
@@ -103,11 +105,23 @@ func (r *MysqlReconciler) ensureDeployment(ctx context.Context, instance *v1beta
 			},
 		},
 	}
-	if err := ctrl.SetControllerReference(instance, deployment, r.Scheme); err != nil {
-		return errors.Wrapf(err, "Error setting owner reference")
-	}
-	if err := r.Client.Create(ctx, deployment); err != nil {
-		return errors.Wrapf(err, "Error creating a deployment")
+	err := r.Client.Get(ctx, types.NamespacedName{Name: deployment.Name, Namespace: instance.Namespace}, deployment)
+	if err != nil {
+
+		if k8serrors.IsNotFound(err) {
+			//creating pvc
+			err = ctrl.SetControllerReference(instance, deployment, r.Scheme)
+			if err != nil {
+				return errors.Wrapf(err, "Error setting owner reference")
+			}
+			err = r.Client.Create(ctx, deployment)
+			if err != nil {
+				return errors.Wrapf(err, "Error creating a deployment")
+			}
+
+			return nil
+		}
+		return errors.Wrapf(err, "Error getting deployment")
 	}
 
 	//Store the username and secret in k8s secret so can be used later
@@ -123,12 +137,23 @@ func (r *MysqlReconciler) ensureDeployment(ctx context.Context, instance *v1beta
 			"password": []byte(mysqlPassword),
 		},
 	}
-	if err := ctrl.SetControllerReference(instance, secret, r.Scheme); err != nil {
-		return errors.Wrapf(err, "Error setting owner reference")
-	}
+	err = r.Client.Get(ctx, types.NamespacedName{Name: secretName, Namespace: instance.Namespace}, secret)
+	if err != nil {
 
-	if err := r.Client.Create(ctx, secret); err != nil {
-		return errors.Wrapf(err, "Error creating a secret")
+		if k8serrors.IsNotFound(err) {
+			//creating pvc
+			err = ctrl.SetControllerReference(instance, secret, r.Scheme)
+			if err != nil {
+				return errors.Wrapf(err, "Error setting owner reference")
+			}
+			err = r.Client.Create(ctx, secret)
+			if err != nil {
+				return errors.Wrapf(err, "Error creating a secret")
+			}
+
+			return nil
+		}
+		return errors.Wrapf(err, "Error getting secret")
 	}
 
 	return nil

@@ -3,7 +3,7 @@ kind: Mysql
 metadata:
   name: mysql-sample
 spec:
-  usepvc: false
+  usepvc: true
   pvcspec:
     name: test
     size: 1Gi

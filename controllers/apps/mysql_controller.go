@@ -54,32 +54,25 @@ func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	r.log = log.FromContext(ctx).WithValues("Mysql", req.NamespacedName)
 	r.log.Info("Started mysql reconciliation")
 
+	funcSlice := []func(ctx context.Context, instance *v1beta1.Mysql) error{
+		r.ensureDefaults, r.ensurePvc, r.ensureDeployment, r.ensureService,
+	}
 	instance := &v1beta1.Mysql{}
 	if err := r.Get(ctx, req.NamespacedName, instance); err != nil {
 		r.log.Info("Unable to fetch mysql object")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 
 	}
-	if err := r.ensureDefaults(instance); err != nil {
-		instance.Status.Status = v1beta1.MysqlStatusError
-		instance.Status.Message = err.Error()
-		return r.ensureStatus(ctx, instance, ctrl.Result{})
+	//loop through our functions slice to create respective objects
+	for _, function := range funcSlice {
+		err := function(ctx, instance)
+		if err != nil {
+			instance.Status.Status = v1beta1.MysqlStatusError
+			instance.Status.Message = err.Error()
+			return r.ensureStatus(ctx, instance, ctrl.Result{})
+		}
 	}
-	if err := r.ensurePvc(ctx, instance); err != nil {
-		instance.Status.Status = v1beta1.MysqlStatusError
-		instance.Status.Message = err.Error()
-		return r.ensureStatus(ctx, instance, ctrl.Result{})
-	}
-	if err := r.ensureDeployment(ctx, instance); err != nil {
-		instance.Status.Status = v1beta1.MysqlStatusError
-		instance.Status.Message = err.Error()
-		return r.ensureStatus(ctx, instance, ctrl.Result{})
-	}
-	if err := r.ensureService(ctx, instance); err != nil {
-		instance.Status.Status = v1beta1.MysqlStatusError
-		instance.Status.Message = err.Error()
-		return r.ensureStatus(ctx, instance, ctrl.Result{})
-	}
+
 	instance.Status.Status = v1beta1.MysqlStatusReady
 	instance.Status.Message = fmt.Sprintf("Mysql instance %s is ready", instance.Name)
 	return r.ensureStatus(ctx, instance, ctrl.Result{})

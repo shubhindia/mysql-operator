@@ -17,10 +17,12 @@ limitations under the License.
 package apps
 
 import (
+	"context"
+
 	"github.com/shubhindia/mysql-operator/apis/apps/v1beta1"
 )
 
-func (r *MysqlReconciler) ensureDefaults(instance *v1beta1.Mysql) error {
+func (r *MysqlReconciler) ensureDefaults(ctx context.Context, instance *v1beta1.Mysql) error {
 
 	if instance.Spec.Image == "" {
 		instance.Spec.Image = "mysql:5.6"

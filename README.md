@@ -12,10 +12,10 @@ DO NOT USE IN PRODUCTION.
 Installation of the MySQL Operator
 ----------------------------------
 
-The MYSQL Operator can be installed using `make`:
+The MYSQL Operator can be installed using `kubectl`:
 
 ```sh
-make deploy
+kubectl apply -f deploy/mysql-operator.yaml
 ```
 
 Note: The propagation of the CRDs can take a few seconds depending on the size

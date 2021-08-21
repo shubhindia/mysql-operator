@@ -15,7 +15,7 @@ Installation of the MySQL Operator
 The MYSQL Operator can be installed using `kubectl`:
 
 ```sh
-kubectl apply -f deploy/mysql-operator.yaml
+kubectl apply -f https://raw.githubusercontent.com/shubhindia/mysql-operator/develop/deploy/mysql-operator.yaml
 ```
 
 Note: The propagation of the CRDs can take a few seconds depending on the size

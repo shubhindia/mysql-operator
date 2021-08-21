@@ -19,14 +19,18 @@ package apps
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/shubhindia/mysql-operator/apis/apps/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	appsv1beta1 "github.com/shubhindia/mysql-operator/apis/apps/v1beta1"
+	v1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -41,15 +45,6 @@ type MysqlReconciler struct {
 //+kubebuilder:rbac:groups=apps.shubhindia.me,resources=mysqls/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=apps.shubhindia.me,resources=mysqls/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Mysql object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.log = log.FromContext(ctx).WithValues("Mysql", req.NamespacedName)
 	r.log.Info("Started mysql reconciliation")
@@ -72,6 +67,15 @@ func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return r.ensureStatus(ctx, instance, ctrl.Result{})
 		}
 	}
+	//Get the deployment and check the status. If its not ready mark mysql as unready
+	deployment := &v1.Deployment{}
+	_ = r.Client.Get(ctx, types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, deployment)
+	if deployment.Status.ReadyReplicas != 1 {
+		instance.Status.Status = v1beta1.MySQLStatusDeploying
+		instance.Status.Message = "Deployment is not ready"
+		return r.ensureStatus(ctx, instance, ctrl.Result{Requeue: true, RequeueAfter: 10 * time.Second})
+
+	}
 
 	instance.Status.Status = v1beta1.MysqlStatusReady
 	instance.Status.Message = fmt.Sprintf("Mysql instance %s is ready", instance.Name)
@@ -82,6 +86,9 @@ func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 func (r *MysqlReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appsv1beta1.Mysql{}).
+		Owns(&v1.Deployment{}).
+		Owns(&corev1.Service{}).
+		Owns(&corev1.PersistentVolumeClaim{}).
 		Complete(r)
 }
 

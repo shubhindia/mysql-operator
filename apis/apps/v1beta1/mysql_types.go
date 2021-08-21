@@ -22,8 +22,9 @@ import (
 )
 
 const (
-	MysqlStatusReady = "Ready"
-	MysqlStatusError = "Error"
+	MysqlStatusReady     = "Ready"
+	MysqlStatusError     = "Error"
+	MySQLStatusDeploying = "Deploying"
 )
 
 //PVCSpec defines the desired state of PVC used by Mysql

@@ -21,12 +21,12 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/shubhindia/mysql-operator/apis/apps/v1beta1"
-	ctrl "sigs.k8s.io/controller-runtime"
+	"k8s.io/apimachinery/pkg/types"
 
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 func (r *MysqlReconciler) ensureService(ctx context.Context, instance *v1beta1.Mysql) error {
@@ -55,7 +55,7 @@ func (r *MysqlReconciler) ensureService(ctx context.Context, instance *v1beta1.M
 	if err != nil {
 
 		if k8serrors.IsNotFound(err) {
-			//creating pvc
+			//creating service
 			err = ctrl.SetControllerReference(instance, service, r.Scheme)
 			if err != nil {
 				return errors.Wrapf(err, "Error setting owner reference")

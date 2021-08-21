@@ -44,6 +44,10 @@ type MysqlReconciler struct {
 //+kubebuilder:rbac:groups=apps.shubhindia.me,resources=mysqls,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=apps.shubhindia.me,resources=mysqls/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=apps.shubhindia.me,resources=mysqls/finalizers,verbs=update
+//+kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 
 func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.log = log.FromContext(ctx).WithValues("Mysql", req.NamespacedName)

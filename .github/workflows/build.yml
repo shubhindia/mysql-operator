@@ -1,0 +1,75 @@
+name: CI
+on:
+  push:
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Setup go 1.16
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Install lint
+        run: |
+          # binary will be $(go env GOPATH)/bin/golangci-lint
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.41.1
+      - name: Run lint
+        run: |
+          make generate
+          golangci-lint run --timeout 5m
+  test:
+    name: test
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Setup go 1.16
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            testbin
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: run test
+        run: |
+          make test
+  build:
+    name: docker build
+    runs-on: ubuntu-20.04
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup go 1.16
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - uses: actions/checkout@v2
+      - name: Set up github environment variables
+        uses: FranzDiebold/github-env-vars-action@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Create docker image
+        run: |
+          make manifests
+          make generate
+          make docker-build
+    

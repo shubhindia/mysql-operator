@@ -41,7 +41,7 @@ var _ = Describe("MySqlDefaults", func() {
 	Context("Update spec", func() {
 		It("Make sure default values get added  when not provided", func() {
 			ctx := context.TODO()
-			reconciler.ensureDefaults(ctx, instance)
+			_ = reconciler.ensureDefaults(ctx, instance)
 			Expect(instance.Spec.Image).To(Equal("mysql:5.6"))
 			Expect(instance.Spec.PVCSpec.Name).To(Equal("mysql-pvc"))
 			Expect(instance.Spec.PVCSpec.Size).To(Equal("1Gi"))
@@ -54,7 +54,7 @@ var _ = Describe("MySqlDefaults", func() {
 			instance.Spec.PVCSpec.Size = "2Gi"
 			instance.Spec.PVCSpec.StorageClassName = "fast"
 			ctx := context.TODO()
-			reconciler.ensureDefaults(ctx, instance)
+			_ = reconciler.ensureDefaults(ctx, instance)
 			Expect(instance.Spec.Image).To(Equal("mysql:7.4"))
 			Expect(instance.Spec.PVCSpec.Size).To(Equal("2Gi"))
 			Expect(instance.Spec.PVCSpec.StorageClassName).To(Equal("fast"))

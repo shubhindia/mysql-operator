@@ -17,6 +17,7 @@ limitations under the License.
 package apps
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
@@ -40,6 +41,8 @@ import (
 
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var reconciler *MysqlReconciler
+var instance *appsv1beta1.Mysql
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -71,6 +74,12 @@ var _ = BeforeSuite(func() {
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
+
+	reconciler = &MysqlReconciler{
+		Client: k8sClient,
+		Scheme: scheme.Scheme,
+		log:    logf.FromContext(context.Background()),
+	}
 
 }, 60)
 

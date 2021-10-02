@@ -53,7 +53,7 @@ func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	r.log = log.FromContext(ctx).WithValues("Mysql", req.NamespacedName)
 	r.log.Info("Started mysql reconciliation")
 
-	funcSlice := []func(ctx context.Context, instance *v1beta1.Mysql) error{
+	funcSlice := []func(ctx context.Context, instance *v1beta1.Mysql) (ctrl.Result, error){
 		r.ensureDefaults, r.ensurePvc, r.ensureDeployment, r.ensureService,
 	}
 	instance := &v1beta1.Mysql{}
@@ -64,11 +64,14 @@ func (r *MysqlReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 	//loop through our functions slice to create respective objects
 	for _, function := range funcSlice {
-		err := function(ctx, instance)
+		res, err := function(ctx, instance)
 		if err != nil {
 			instance.Status.Status = v1beta1.MysqlStatusError
 			instance.Status.Message = err.Error()
 			return r.ensureStatus(ctx, instance, ctrl.Result{})
+		}
+		if res.Requeue {
+			return res, nil
 		}
 	}
 	//Get the deployment and check the status. If its not ready mark mysql as unready

@@ -20,9 +20,10 @@ import (
 	"context"
 
 	"github.com/shubhindia/mysql-operator/apis/apps/v1beta1"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func (r *MysqlReconciler) ensureDefaults(ctx context.Context, instance *v1beta1.Mysql) error {
+func (r *MysqlReconciler) ensureDefaults(ctx context.Context, instance *v1beta1.Mysql) (ctrl.Result, error) {
 
 	if instance.Spec.Image == "" {
 		instance.Spec.Image = "mysql:5.6"
@@ -37,5 +38,5 @@ func (r *MysqlReconciler) ensureDefaults(ctx context.Context, instance *v1beta1.
 		instance.Spec.PVCSpec.StorageClassName = "standard"
 	}
 
-	return nil
+	return ctrl.Result{}, nil
 }

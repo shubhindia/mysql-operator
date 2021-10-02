@@ -21,11 +21,13 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/shubhindia/mysql-operator/apis/apps/v1beta1"
+	"k8s.io/apimachinery/pkg/types"
 
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 var _ = Describe("MySqlDefaults", func() {
@@ -33,37 +35,29 @@ var _ = Describe("MySqlDefaults", func() {
 	BeforeEach(func() {
 		instance = &v1beta1.Mysql{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test",
+				Name:      "deployment-test",
 				Namespace: "default",
+				UID:       types.UID("deployment-test"),
 			},
 			Spec: v1beta1.MysqlSpec{},
 		}
 
 	})
 	Context("Update spec", func() {
-		It("Make sure default values get added  when not provided", func() {
+		It("Make sure deployment is created", func() {
 			ctx := context.TODO()
-			res, err := reconciler.ensureDefaults(ctx, instance)
-			Expect(res).To(Equal(ctrl.Result{}))
+			res, err := reconciler.ensureDeployment(ctx, instance)
+			Expect(res).To(Equal(ctrl.Result{Requeue: true}))
 			Expect(err).To(BeNil())
-			Expect(instance.Spec.Image).To(Equal("mysql:5.6"))
-			Expect(instance.Spec.PVCSpec.Name).To(Equal("mysql-pvc"))
-			Expect(instance.Spec.PVCSpec.Size).To(Equal("1Gi"))
-			Expect(instance.Spec.PVCSpec.StorageClassName).To(Equal("standard"))
+			Expect(res).To(Equal(ctrl.Result{Requeue: true}))
+			Expect(err).To(BeNil())
 
-		})
-		It("Make sure that provided values are not being overwritten by default values", func() {
-			instance.Name = "values-test"
-			instance.Spec.Image = "mysql:7.4"
-			instance.Spec.PVCSpec.Size = "2Gi"
-			instance.Spec.PVCSpec.StorageClassName = "fast"
-			ctx := context.TODO()
-			res, err := reconciler.ensureDefaults(ctx, instance)
-			Expect(res).To(Equal(ctrl.Result{}))
-			Expect(err).To(BeNil())
-			Expect(instance.Spec.Image).To(Equal("mysql:7.4"))
-			Expect(instance.Spec.PVCSpec.Size).To(Equal("2Gi"))
-			Expect(instance.Spec.PVCSpec.StorageClassName).To(Equal("fast"))
+			By("Checking id deployment is created")
+			deployment := &appsv1.Deployment{}
+			Expect(k8sClient.Get(ctx, types.NamespacedName{
+				Name:      instance.Name,
+				Namespace: instance.Namespace,
+			}, deployment)).To(Succeed())
 
 		})
 

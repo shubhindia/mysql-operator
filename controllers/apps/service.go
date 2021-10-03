@@ -29,7 +29,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func (r *MysqlReconciler) ensureService(ctx context.Context, instance *v1beta1.Mysql) error {
+func (r *MysqlReconciler) ensureService(ctx context.Context, instance *v1beta1.Mysql) (ctrl.Result, error) {
 
 	service := &corev1.Service{
 
@@ -58,16 +58,16 @@ func (r *MysqlReconciler) ensureService(ctx context.Context, instance *v1beta1.M
 			//creating service
 			err = ctrl.SetControllerReference(instance, service, r.Scheme)
 			if err != nil {
-				return errors.Wrapf(err, "Error setting owner reference")
+				return ctrl.Result{}, errors.Wrapf(err, "Error setting owner reference")
 			}
 			err = r.Client.Create(ctx, service)
 			if err != nil {
-				return errors.Wrapf(err, "Error creating a service")
+				return ctrl.Result{}, errors.Wrapf(err, "Error creating a service")
 			}
 
-			return nil
+			return ctrl.Result{Requeue: true}, nil
 		}
-		return errors.Wrapf(err, "Error getting service")
+		return ctrl.Result{}, errors.Wrapf(err, "Error getting service")
 	}
-	return nil
+	return ctrl.Result{}, nil
 }

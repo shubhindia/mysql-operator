@@ -30,7 +30,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func (r *MysqlReconciler) ensurePvc(ctx context.Context, instance *v1beta1.Mysql) error {
+func (r *MysqlReconciler) ensurePvc(ctx context.Context, instance *v1beta1.Mysql) (ctrl.Result, error) {
 
 	mysqlPVC := &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
@@ -55,17 +55,17 @@ func (r *MysqlReconciler) ensurePvc(ctx context.Context, instance *v1beta1.Mysql
 			//creating pvc
 			err = ctrl.SetControllerReference(instance, mysqlPVC, r.Scheme)
 			if err != nil {
-				return errors.Wrapf(err, "Error setting owner reference")
+				return ctrl.Result{}, errors.Wrapf(err, "Error setting owner reference")
 			}
 			err = r.Client.Create(ctx, mysqlPVC)
 			if err != nil {
-				return errors.Wrapf(err, "Error creating a secret")
+				return ctrl.Result{}, errors.Wrapf(err, "Error creating a secret")
 			}
 
-			return nil
+			return ctrl.Result{Requeue: true}, nil
 		}
-		return errors.Wrapf(err, "Error getting pvc")
+		return ctrl.Result{}, errors.Wrapf(err, "Error getting pvc")
 	}
 
-	return nil
+	return ctrl.Result{}, nil
 }

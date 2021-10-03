@@ -46,7 +46,7 @@ func StringWithCharset(length int, charset string) string {
 	return string(b)
 }
 
-func (r *MysqlReconciler) ensureDeployment(ctx context.Context, instance *v1beta1.Mysql) error {
+func (r *MysqlReconciler) ensureDeployment(ctx context.Context, instance *v1beta1.Mysql) (ctrl.Result, error) {
 
 	//Store the secret in k8s secret so can be used later
 	secretName := instance.Name + "-user-password"
@@ -65,19 +65,19 @@ func (r *MysqlReconciler) ensureDeployment(ctx context.Context, instance *v1beta
 	if err != nil {
 
 		if k8serrors.IsNotFound(err) {
-			//creating pvc
+			//creating secret
 			err = ctrl.SetControllerReference(instance, secret, r.Scheme)
 			if err != nil {
-				return errors.Wrapf(err, "Error setting owner reference")
+				return ctrl.Result{}, errors.Wrapf(err, "Error setting owner reference")
 			}
 			err = r.Client.Create(ctx, secret)
 			if err != nil {
-				return errors.Wrapf(err, "Error creating a secret")
+				return ctrl.Result{}, errors.Wrapf(err, "Error creating a secret")
 			}
 
-			return nil
+			return ctrl.Result{Requeue: true}, nil
 		}
-		return errors.Wrapf(err, "Error getting secret")
+		return ctrl.Result{}, errors.Wrapf(err, "Error getting secret")
 	}
 	//Create mysql deployment here
 	deployment := &appsv1.Deployment{
@@ -143,17 +143,17 @@ func (r *MysqlReconciler) ensureDeployment(ctx context.Context, instance *v1beta
 			//creating pvc
 			err = ctrl.SetControllerReference(instance, deployment, r.Scheme)
 			if err != nil {
-				return errors.Wrapf(err, "Error setting owner reference")
+				return ctrl.Result{}, errors.Wrapf(err, "Error setting owner reference")
 			}
 			err = r.Client.Create(ctx, deployment)
 			if err != nil {
-				return errors.Wrapf(err, "Error creating a deployment")
+				return ctrl.Result{}, errors.Wrapf(err, "Error creating a deployment")
 			}
 
-			return nil
+			return ctrl.Result{Requeue: true}, nil
 		}
-		return errors.Wrapf(err, "Error getting deployment")
+		return ctrl.Result{}, errors.Wrapf(err, "Error getting deployment")
 	}
 
-	return nil
+	return ctrl.Result{}, nil
 }

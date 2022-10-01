@@ -100,7 +100,7 @@ mysqlsh -h <node-ip> -P <node-port> -u root -p
 When promted enter the password, which received from secret.
 
 ## TODO
-1. Build a cli to interact with this cluster [WIP]
-2. Add test cases [WIP]
-3. Add github workflow [TODO]
+
+1. Add test cases [WIP]
+2. Add github workflow [TODO]
 

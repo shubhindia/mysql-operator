@@ -27,7 +27,7 @@ const (
 	MySQLStatusDeploying = "Deploying"
 )
 
-//PVCSpec defines the desired state of PVC used by Mysql
+// PVCSpec defines the desired state of PVC used by Mysql
 type PVCSpec struct {
 	Name             string `json:"name"`
 	Size             string `json:"size"`
@@ -50,10 +50,10 @@ type MysqlStatus struct {
 	SecretRef corev1.SecretReference `json:"secretRef"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-//+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-//+kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
 // Mysql is the Schema for the mysqls API
 type Mysql struct {
 	metav1.TypeMeta   `json:",inline"`
